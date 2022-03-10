@@ -1,0 +1,218 @@
+N <= 1000, M <= 10**5 // 0-1, нет цен
+int w[];
+
+vector<int> dp(M + 1, 0), p(M + 1, -1);
+dp[0] = 1;
+for (int i = 0; i < n; ++i) {
+	for (int j = m - w[i]; j >= 0; --j) {
+		if (dp[j] && !dp[j + w[i]]) {
+			dp[j + w[i]] = 1;
+			p[j + w[i]] = i;
+		}
+	}
+}
+int ans;
+for (int j = m; j >= 0; --j)
+	if (dp[j]) {
+		ans = j;
+		break;
+	}
+cout << ans << endl;
+vector<int> items;
+while (ans) {
+	items.push_back(p[ans]);
+	ans -= w[p[ans]];
+}
+
+
+///////////////////////
+N <= 1000, M <= 10**5 // бесконечно повторений, нет цен
+int w[];
+
+vector<int> dp(M + 1, 0), p;
+dp[0] = 1;
+for (int i = 0; i < n; ++i) {
+	for (int j = 0; j + w[i] <= m; ++j) {
+		if (dp[j]) {
+			dp[j + w[i]] = 1;
+			p[j + w[i]] = i;
+		}
+	}
+}
+int ans;
+for (int j = m; j >= 0; --j)
+	if (dp[j]) {
+		ans = j;
+		break;
+	}
+cout << ans << endl;
+vector<int> items;
+while (ans) {
+	items.push_back(p[ans]);
+	ans -= w[p[ans]];
+}
+////////////////////////////////
+N <= 1000, M <= 10**5 // k - повторений, нет цен
+int w[], k[];
+sum(K) * M <= 10**8
+
+vector<int> dp(M + 1, 0), p(M + 1, -1);
+dp[0] = 1;
+for (int i = 0; i < n; ++i) {
+	for (int temp = 0; temp < k[i]; ++temp) {
+		for (int j = m - w[i]; j >= 0; --j) {
+			if (dp[j] && !dp[j + w[i]]) {
+				dp[j + w[i]] = 1;
+				p[j + w[i]] = i;
+			}
+		}
+	}
+}
+
+/// рюкзаки с ценами
+N <= 1000, M <= 10**5 // 0-1, не рекурсивно
+int w[], c[];
+
+vector<int> dp(M + 1, -1);
+dp[0] = 0;
+for (int i = 0; i < n; ++i) {
+	for (int j = m - w[i]; j >= 0; --j) {
+		if (dp[j] != -1) {
+			dp[j + w[i]] = max(dp[j + w[i]], dp[j] + c[i]);
+		}
+	}
+}
+
+int best_mass = max_element(dp.begin(), dp.end()) - dp.begin();
+int best_cost = dp[best_mass];
+
+////
+N <= 1000, M <= 1000 // 0-1, рекурсивно c ценами, неточно
+int w[], c[];
+int dp[1010][1010];
+bool take[1010][1010];
+bool used[1010][1010];
+
+int rec(int i, int ost) {
+	if (i == n)
+		return 0;
+	if (used[i][ost])
+		return dp[i][ost];
+	used[i][ost] = 1;
+	dp[i][ost] = rec(i + 1, ost);
+	if (ost >= w[i]) {
+		int another_ans = rec(i + 1, ost - w[i]) + c[i];
+		if (another_ans > dp[i][ost]) {
+			dp[i][ost] = another_ans;
+			take[i][ost] = true;
+		}
+	}
+	return dp[i][ost];
+}
+
+cout << rec(0, m) << endl;
+vector<int> items;
+for (int i = 0, ost = m; i < n; ++i) {
+	if (take[i][ost]) {
+		items.push_back(i);
+		ost -= w[i];
+	}
+}
+
+
+// "точный" 0-1 рюкзак
+N <= 1000, M <= 1000 // рекурсивно
+int w[], c[];
+int dp[1010][1010];
+bool used[1010][1010];
+const int INF = 1e9 + 7;
+
+int rec(int i, int ost) {
+	if (i == n) {
+		if (ost)
+			return -INF;
+		return 0;
+	}
+	if (used[i][ost])
+		return dp[i][ost];
+	used[i][ost] = 1;
+	dp[i][ost] = rec(i + 1, ost);
+	if (ost >= w[i]) {
+		int another_ans = rec(i + 1, ost - w[i]);
+		if (another_ans != -INF)
+			another_ans += c[i]
+		dp[i][ost] = max(dp[i][ost], another_ans);
+	}
+	return dp[i][ost];
+}
+
+cout << rec(0, m) << endl;
+
+////
+N <= 1000, M <= 1000 // бесконечно повторений, рекурсивно c ценами, неточно
+int w[], c[];
+int dp[1010][1010];
+bool take[1010][1010];
+bool used[1010][1010];
+
+int rec(int i, int ost) {
+	if (i == n)
+		return 0;
+	if (used[i][ost])
+		return dp[i][ost];
+	used[i][ost] = 1;
+	dp[i][ost] = rec(i + 1, ost);
+	if (ost >= w[i]) {
+		int another_ans = rec(i, ost - w[i]) + c[i];
+		if (another_ans > dp[i][ost]) {
+			dp[i][ost] = another_ans;
+			take[i][ost] = 1;
+		}
+	}
+	return dp[i][ost];
+}
+
+cout << rec(0, m) << endl;
+vector<int> items;
+for (int i = 0, ost = m; i < n; ) {
+	if (take[i][ost]) {
+		items.push_back(i);
+		ost -= w[i];
+	} else
+		++i;
+}
+
+////
+N <= 1000, M <= 1000 // 0-k, рекурсивно c ценами, неточно
+int w[], c[], k[];
+int dp[1010][1010];
+int take[1010][1010];
+bool used[1010][1010];
+
+N * M + SUM(K_i) * M
+
+int rec(int i, int ost) {
+	if (i == n)
+		return 0;
+	if (used[i][ost])
+		return dp[i][ost];
+	used[i][ost] = 1;
+	dp[i][ost] = rec(i + 1, ost);
+	for (int cnt = 1; cnt * w[i] <= ost && cnt <= k[i]; ++cnt) {
+		int another_ans = rec(i, ost - cnt * w[i]) + cnt * c[i];
+		if (another_ans > dp[i][ost]) {
+			dp[i][ost] = another_ans;
+			take[i][ost] = cnt;
+		}
+	}
+	return dp[i][ost];
+}
+
+cout << rec(0, m) << endl;
+vector<pair<int, int> > items;
+for (int i = 0, ost = m; i < n; ++) {
+	if (take[i][ost]) {
+		items.push_back({ i, take[i][ost] });
+		ost -= w[i] * take[i][ost];
+	}
+}
